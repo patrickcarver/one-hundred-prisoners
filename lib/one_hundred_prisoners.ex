@@ -14,45 +14,68 @@ defmodule OneHundredPrisoners do
   # turn the light off the first time they find it on;
   # otherwise leave it in the state it is found
 
-  def run do
-    turn(light_bulb: :off, prisoners: create_prisoners())
-  end
+  defmodule Counter do
+    defstruct [:times_on_to_off]
 
-  def turn(light_bulb: state, prisoners: prisoners) do
-    {index, prisoner} = Enum.random(prisoners)
+    def new do
+      %__MODULE__{times_on_to_off: 0}
+    end
 
-    {new_state, new_prisoner} = process(state, prisoner)
-
-    case new_prisoner do
-      %{type: :counter, times_on_to_off: 100} ->
-        IO.puts "Finished"
-        prisoners
-      _ ->
-        new_prisoners = Map.put(prisoners, index, new_prisoner)
-        turn(light_bulb: new_state, prisoners: new_prisoners)
+    def increment(%__MODULE__{} = counter) do
+      Map.update!(counter, :times_on_to_off, & &1 + 1)
     end
   end
 
-  def process(:off, %{type: :counter, times_on_to_off: count}) do
-    new_prisoner = %{type: :counter, times_on_to_off: count + 1}
+  defmodule Regular do
+    defstruct [:found_light_on_once]
+
+    def new do
+      %__MODULE__{found_light_on_once: false}
+    end
+  end
+
+  def run do
+    visit(light_bulb: :off, prisoners: create_prisoners(), visits: 1)
+  end
+
+  def visit(light_bulb: light_bulb_state, prisoners: prisoners, visits: visits) do
+    {index, prisoner} = Enum.random(prisoners)
+
+    {new_light_bulb_state, new_prisoner} = process(light_bulb_state, prisoner)
+
+    case new_prisoner do
+      %Counter{times_on_to_off: 100} ->
+        visits
+      _ ->
+        new_prisoners = Map.put(prisoners, index, new_prisoner)
+        visit(light_bulb: new_light_bulb_state, prisoners: new_prisoners, visits: visits + 1)
+    end
+  end
+
+  def process(:off, %Counter{} = prisoner) do
+    new_prisoner = Counter.increment(prisoner)
     {:on, new_prisoner}
   end
 
-  def process(:on, %{type: :counter} = prisoner) do
-    {:on, prisoner}
+  def process(:on, %Regular{found_light_on_once: false}) do
+    {:off, %Regular{found_light_on_once: true}}
   end
 
-  def process(:on, %{type: :regular, have_found_light_on_once: false}) do
-    {:off, %{type: :regular, have_found_light_on_once: true}}
-  end
-
-  def process(state, prisoner) do
-    {state, prisoner}
+  def process(light_bulb_state, prisoner) do
+    {light_bulb_state, prisoner}
   end
 
   def create_prisoners() do
     1..99
-    |> Enum.reduce(%{}, fn index, acc -> Map.put(acc, index, %{type: :regular, have_found_light_on_once: false}) end)
-    |> Map.put(100, %{type: :counter, times_on_to_off: 0})
+    |> add_regulars()
+    |> add_counter_at_index(100)
+  end
+
+  defp add_regulars(range) do
+    Enum.reduce(range, %{}, fn index, acc -> Map.put(acc, index, Regular.new()) end)
+  end
+
+  defp add_counter_at_index(prisoners, index) do
+    Map.put(prisoners, index, Counter.new())
   end
 end
