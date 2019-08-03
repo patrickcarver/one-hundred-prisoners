@@ -3,6 +3,6 @@ defmodule OneHundredPrisonersTest do
   doctest OneHundredPrisoners
 
   test "greets the world" do
-    assert OneHundredPrisoners.hello() == :world
+
   end
 end
