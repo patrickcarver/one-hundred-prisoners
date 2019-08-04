@@ -14,9 +14,8 @@ defmodule OneHundredPrisoners do
   # turn the light off the first time they find it on;
   # otherwise leave it in the state it is found
 
-  alias __MODULE__.Prisoners.{Counter, Regular}
-  alias __MODULE__.VisitState
-
+  alias __MODULE__.{LightBulb, VisitState}
+  alias __MODULE__.Prisoners.{Counter}
 
   def run do
     VisitState.new()
@@ -26,7 +25,7 @@ defmodule OneHundredPrisoners do
   def visit(state) do
     {index, prisoner} = Enum.random(state.prisoners)
 
-    {new_light_bulb, new_prisoner} = process(state.light_bulb, prisoner)
+    {new_light_bulb, new_prisoner} = LightBulb.maybe_toggle(state.light_bulb, prisoner)
 
     case new_prisoner do
       %Counter{times_on_to_off: 100} ->
@@ -38,16 +37,5 @@ defmodule OneHundredPrisoners do
     end
   end
 
-  def process(:off, %Counter{} = prisoner) do
-    new_prisoner = Counter.increment(prisoner)
-    {:on, new_prisoner}
-  end
 
-  def process(:on, %Regular{found_light_on_once: false}) do
-    {:off, %Regular{found_light_on_once: true}}
-  end
-
-  def process(light_bulb, prisoner) do
-    {light_bulb, prisoner}
-  end
 end
