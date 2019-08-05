@@ -1,41 +1,53 @@
 defmodule OneHundredPrisoners do
-  # TURNS
-  # light_bulb_state (:on, :off; starts with :off)
-  # list_of_prisoners (1 Counter, 99 Regulars)
 
-  # PRISONER TYPES
-  #
-  # Counter
-  # always turn the light on if it is off
-  # the 100th time this is done, sure that all prisoners
-  # have visited the room
-  #
-  # Regular
-  # turn the light off the first time they find it on;
-  # otherwise leave it in the state it is found
+  defstruct ~w[light_bulb prisoners current_visit ids_of_visited]a
 
-  alias __MODULE__.{LightBulb, VisitState}
-  alias __MODULE__.Prisoners.{Counter}
+  alias __MODULE__.Prisoner
+  alias __MODULE__.Prisoner.Counter
 
   def run do
-    VisitState.new()
-    |> visit()
+    new() |> visit()
   end
 
-  def visit(state) do
+  defp new do
+    %__MODULE__{
+      light_bulb: :light_bulb_off,
+      prisoners: Prisoner.create_prisoners(),
+      ids_of_visited: MapSet.new(),
+      current_visit: 1
+    }
+  end
+
+  defp visit(state) do
     {index, prisoner} = Enum.random(state.prisoners)
 
-    {new_light_bulb, new_prisoner} = LightBulb.maybe_toggle(state.light_bulb, prisoner)
+    {new_light_bulb, new_prisoner} = Prisoner.visit_room(state.light_bulb, prisoner)
 
     case new_prisoner do
       %Counter{times_on_to_off: 100} ->
-        state.current_visit
+        verdict(state)
       _ ->
         new_prisoners = Map.put(state.prisoners, index, new_prisoner)
-        VisitState.update(state, new_light_bulb, new_prisoners)
-        |> visit()
+        new_state = update(state, new_light_bulb, new_prisoners, index)
+        visit(new_state)
     end
   end
 
 
+  defp update(state, light_blub, prisoners, index) do
+    state
+    |> Map.put(:light_bulb, light_blub)
+    |> Map.put(:prisoners, prisoners)
+    |> Map.update!(:current_visit, & &1 + 1)
+    |> Map.update!(:ids_of_visited, & MapSet.put(&1, index))
+  end
+
+  defp verdict(state) do
+    num_visited = Enum.count(state.ids_of_visited)
+    if num_visited == 100 do
+      :set_free
+    else
+      :shoot_them
+    end
+  end
 end

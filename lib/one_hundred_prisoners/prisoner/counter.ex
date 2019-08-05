@@ -1,4 +1,4 @@
-defmodule OneHundredPrisoners.Prisoners.Counter do
+defmodule OneHundredPrisoners.Prisoner.Counter do
   defstruct [:times_on_to_off]
 
   def new do

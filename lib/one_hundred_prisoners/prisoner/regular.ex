@@ -1,4 +1,4 @@
-defmodule OneHundredPrisoners.Prisoners.Regular do
+defmodule OneHundredPrisoners.Prisoner.Regular do
   defstruct [:found_light_on_once]
 
   def new do
