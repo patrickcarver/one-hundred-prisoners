@@ -9,4 +9,4 @@ There are 100 prisoners in solitary cells. There's a central living room with on
 The first prisoner selected is in charge of turning the light on whenever it is found off.
 Each other prisoner is to turn the light off the very first time they find it on, otherwise they are to leave it in the state they found it. When the first prisoner selected turns the light on for the 100th time, they can safely assume that all prisoners have been in the interrogation room.
 
-<https://medium.com/i-math/100-prisoners-and-a-light-bulb-573426272f4c>
+from: <https://medium.com/i-math/100-prisoners-and-a-light-bulb-573426272f4c>
